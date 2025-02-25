@@ -2,6 +2,8 @@
 
 An interactive web application for visualizing and comparing different reinforcement learning algorithms in a grid world environment.
 
+![image](./assets/image.png)
+
 ## Features
 
 - Interactive grid world environment with:
