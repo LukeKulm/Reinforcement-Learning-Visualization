@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RL Algorithm Visualization</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Reinforcement Learning Visualization</h1>
+        
+        <div class="main-content">
+            <div class="visualization-panel">
+                <h2>Grid World Environment</h2>
+                <div class="grid-container">
+                    <div id="gridworld"></div>
+                </div>
+                <div class="state-info">
+                    <p>Episode: <span id="episode-counter">0</span></p>
+                    <p>Total Reward: <span id="total-reward">0</span></p>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <h2>Controls</h2>
+                <div class="algorithm-selector">
+                    <label for="algorithm">Algorithm:</label>
+                    <select id="algorithm">
+                        <option value="q-learning">Q-Learning</option>
+                        <option value="dqn">DQN</option>
+                        <option value="reinforce">REINFORCE</option>
+                    </select>
+                </div>
+
+                <div class="training-controls">
+                    <button id="start-training">Start Training</button>
+                    <button id="reset">Reset</button>
+                    <button id="play-policy">Play Current Policy</button>
+                </div>
+
+                <div id="parameters" class="parameters">
+                    <!-- Parameters will be dynamically added here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="metrics-panel">
+            <h2>Training Metrics</h2>
+            <div class="chart-container">
+                <canvas id="reward-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/grid_renderer.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/visualization.js') }}"></script>
+</body>
+</html> 
