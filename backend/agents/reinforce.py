@@ -20,6 +20,8 @@ class ReinforceAgent(BaseAgent):
         super().__init__(state_size, action_size)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.gamma = gamma
+        self.alpha = alpha
+        self.epsilon = 0.1
         
         # Policy network
         self.policy = PolicyNetwork(state_size, action_size).to(self.device)
@@ -101,7 +103,7 @@ class ReinforceAgent(BaseAgent):
         # Reinitialize policy network
         self.policy = PolicyNetwork(self.state_size, self.action_size).to(self.device)
         
-        # Reset optimizer
+        # Reset optimizer with stored learning rate
         self.optimizer = optim.Adam(self.policy.parameters(), lr=self.alpha)
         
         # Clear episode memory

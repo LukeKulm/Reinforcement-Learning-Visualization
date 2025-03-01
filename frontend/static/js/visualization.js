@@ -46,7 +46,6 @@ class RLVisualizer {
     const startButton = document.getElementById('start-training');
     const resetButton = document.getElementById('reset');
     const algorithmSelect = document.getElementById('algorithm');
-    const showPolicyButton = document.getElementById('show-policy');
     const playPolicyButton = document.getElementById('play-policy');
 
     startButton.addEventListener('click', () => {
@@ -70,7 +69,6 @@ class RLVisualizer {
       this.setupAlgorithmSpecificParams();
     });
 
-    showPolicyButton.addEventListener('click', () => this.requestAndShowPolicy());
     playPolicyButton.addEventListener('click', async () => {
       if (!this.isPlayingPolicy) {
         this.isPlayingPolicy = true;
@@ -172,35 +170,77 @@ class RLVisualizer {
   }
 
   async playPolicy() {
-    const response = await fetch('/api/play_policy', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        algorithm: document.getElementById('algorithm').value
-      })
-    });
+    console.log("Play Policy button clicked");
+    const algorithm = document.getElementById('algorithm').value;
+    console.log("Current algorithm:", algorithm);
 
-    const data = await response.json();
+    try {
+      console.log("Making API call to /play_policy");
+      const response = await fetch('/api/play_policy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          algorithm: algorithm
+        })
+      });
 
-    // Reset agent to start position
-    this.grid.updateAgentPosition(0, 0);
-    await new Promise(resolve => setTimeout(resolve, 500));  // Pause at start
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-    // Visualize the trajectory
-    await this.visualizeTrajectory(data.trajectory);
+      const data = await response.json();
+      console.log("Received policy data:", data);
 
-    // Update total reward display
-    document.getElementById('total-reward').textContent = data.total_reward.toFixed(2);
+      if (!data.trajectory || data.trajectory.length === 0) {
+        console.error("Received empty trajectory");
+        return;
+      }
+
+      // Disable controls during playback
+      const playPolicyButton = document.getElementById('play-policy');
+      const startButton = document.getElementById('start-training');
+      playPolicyButton.disabled = true;
+      startButton.disabled = true;
+
+      try {
+        await this.visualizeTrajectory(data.trajectory);
+      } finally {
+        // Re-enable controls
+        playPolicyButton.disabled = false;
+        startButton.disabled = false;
+      }
+    } catch (error) {
+      console.error("Error during policy playback:", error);
+    }
   }
 
   async visualizeTrajectory(trajectory) {
-    for (const step of trajectory) {
+    if (!trajectory || trajectory.length === 0) {
+      console.log("Empty trajectory received");
+      return;
+    }
+
+    console.log("Starting trajectory visualization");
+    console.log("Full trajectory:", trajectory);
+
+    // Start from the beginning
+    console.log("Setting initial position:", trajectory[0].state);
+    this.grid.updateAgentPosition(trajectory[0].state[0], trajectory[0].state[1]);
+
+    // Add initial pause to see starting position
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Animate through each state in the trajectory
+    for (let i = 1; i < trajectory.length; i++) {
+      const step = trajectory[i];
+      console.log(`Step ${i}:`, step);
+      console.log(`Moving to position:`, step.state);
       this.grid.updateAgentPosition(step.state[0], step.state[1]);
-      // Longer delay for better visualization
       await new Promise(resolve => setTimeout(resolve, 500));
     }
+    console.log("Trajectory visualization complete");
   }
 
   pauseTraining() {
@@ -227,8 +267,8 @@ class RLVisualizer {
 
     this.rewardChart.update('none');
 
-    // Update grid visualization
-    this.grid.updateAgentPosition(data.agent_pos[0], data.agent_pos[1]);
+    // Remove the grid visualization update during training
+    // this.grid.updateAgentPosition(data.agent_pos[0], data.agent_pos[1]);
 
     this.currentEpisode++;
   }

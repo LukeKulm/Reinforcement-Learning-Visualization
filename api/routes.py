@@ -26,13 +26,13 @@ def train_step():
     if current_agent is None or current_agent != agents[algorithm]:
         current_agent = agents[algorithm]
     
-    state = env.reset()
+    state, pos = env.reset()  # Get both state and position
     total_reward = 0
     policy = []
     
     while True:
         action = current_agent.choose_action(state)
-        next_state, reward, done = env.step(action)
+        next_state, reward, done, next_pos = env.step(action)  # Get position from step
         current_agent.learn(state, action, reward, next_state, done)
         
         total_reward += reward
@@ -46,7 +46,7 @@ def train_step():
     
     return jsonify({
         'reward': total_reward,
-        'agent_pos': env.state,
+        'agent_pos': next_pos,  # Return final position
         'policy': policy.tolist() if isinstance(policy, np.ndarray) else policy
     })
 
@@ -86,46 +86,75 @@ def get_policy():
 
 @api_bp.route('/play_policy', methods=['POST'])
 def play_policy():
+    print("\n=== Starting play_policy endpoint ===")
+    global current_agent
+    
     data = request.json
     algorithm = data['algorithm']
-    start_state = env.reset()  # Reset to start state
+    print(f"Requested algorithm: {algorithm}")
+    
+    # Reset environment and get initial state
+    state, pos = env.reset()
+    print(f"Initial state: {state}, position: {pos}")
     
     if current_agent is None:
+        print("Creating new agent")
         current_agent = agents[algorithm]
+    else:
+        print("Using existing agent")
     
     trajectory = []
-    state = start_state
     done = False
     total_reward = 0
+    steps = 0
+    max_steps = 100
     
-    while not done and len(trajectory) < 100:  # Add max steps to prevent infinite loops
-        # Get action from current policy (no exploration)
-        if isinstance(current_agent, DQNAgent) or isinstance(current_agent, ReinforceAgent):
-            with torch.no_grad():
-                state_tensor = current_agent._to_tensor(state)
-                if isinstance(current_agent, DQNAgent):
-                    q_values = current_agent.model(state_tensor)
-                    action = torch.argmax(q_values).item()
-                else:  # ReinforceAgent
-                    probs = current_agent.policy(state_tensor)
-                    action = torch.argmax(probs).item()
-        else:  # QLearningAgent
-            action = np.argmax(current_agent.q_table[state])
-        
-        next_state, reward, done = env.step(action)
-        trajectory.append({
-            'state': env.state,
-            'action': action,
-            'reward': reward
-        })
-        
-        total_reward += reward
-        state = next_state
-    
-    return jsonify({
-        'trajectory': trajectory,
-        'total_reward': total_reward
+    # Add initial state to trajectory
+    trajectory.append({
+        'state': tuple(map(int, pos)),  # Convert to regular Python tuple of ints
+        'action': None,
+        'reward': float(0)  # Ensure reward is float
     })
+    print(f"Added initial position to trajectory: {pos}")
+    
+    try:
+        while not done and steps < max_steps:
+            # Get action from current policy
+            if isinstance(current_agent, DQNAgent) or isinstance(current_agent, ReinforceAgent):
+                with torch.no_grad():
+                    state_tensor = current_agent._to_tensor(state)
+                    if isinstance(current_agent, DQNAgent):
+                        q_values = current_agent.model(state_tensor)
+                        action = torch.argmax(q_values).item()
+                    else:  # ReinforceAgent
+                        probs = current_agent.policy(state_tensor)
+                        action = torch.argmax(probs).item()
+            else:  # QLearningAgent
+                action = int(np.argmax(current_agent.q_table[state]))  # Convert to Python int
+            
+            print(f"Step {steps}: Chosen action: {action}")
+            next_state, reward, done, next_pos = env.step(action)
+            print(f"Step {steps}: New state: {next_state}, new position: {next_pos}, reward: {reward}, done: {done}")
+            
+            trajectory.append({
+                'state': tuple(map(int, next_pos)),  # Convert to regular Python tuple of ints
+                'action': int(action),  # Convert to Python int
+                'reward': float(reward)  # Convert to Python float
+            })
+            
+            total_reward += reward
+            state = next_state
+            steps += 1
+        
+        print(f"Final trajectory length: {len(trajectory)}")
+        print(f"Final trajectory: {trajectory}")
+        return jsonify({
+            'trajectory': trajectory,
+            'total_reward': float(total_reward)  # Convert to Python float
+        })
+    except Exception as e:
+        print(f"Error during policy execution: {e}")
+        raise
 
 @api_bp.route('/get_grid_info', methods=['GET'])
 def get_grid_info():
