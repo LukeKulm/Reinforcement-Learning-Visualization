@@ -24,10 +24,10 @@ An interactive web application for visualizing and comparing different reinforce
 ## Installation Instructions
 
 1. Clone the repository:
-bash
+```bash
 git clone https://github.com/yourusername/rl-visualization.git
 cd rl-visualization
-
+```
 2. Create and activate a virtual environment:
 
 On Windows:

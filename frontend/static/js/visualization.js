@@ -35,7 +35,30 @@ class RLVisualizer {
         animation: false,
         scales: {
           y: {
-            beginAtZero: true
+            beginAtZero: true,
+            ticks: {
+              font: {
+                family: "Helvetica Neue"
+              }
+            }
+          },
+          x: {
+            min: 0,
+            max: 500,  // Show 500 episodes worth of space initially
+            ticks: {
+              font: {
+                family: "Helvetica Neue"
+              }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: {
+              font: {
+                family: "Helvetica Neue"
+              }
+            }
           }
         }
       }
@@ -259,17 +282,13 @@ class RLVisualizer {
     this.rewardChart.data.labels.push(this.currentEpisode);
     this.rewardChart.data.datasets[0].data.push(this.cumulativeReward);
 
-    // Keep only last 100 episodes in view
-    if (this.rewardChart.data.labels.length > 100) {
+    // Only keep last 500 points in memory
+    if (this.rewardChart.data.labels.length > 500) {
       this.rewardChart.data.labels.shift();
       this.rewardChart.data.datasets[0].data.shift();
     }
 
     this.rewardChart.update('none');
-
-    // Remove the grid visualization update during training
-    // this.grid.updateAgentPosition(data.agent_pos[0], data.agent_pos[1]);
-
     this.currentEpisode++;
   }
 
