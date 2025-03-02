@@ -108,17 +108,24 @@ def play_policy():
     total_reward = 0
     steps = 0
     max_steps = 100
+    last_pos = None  # Add this to track if agent is stuck
     
     # Add initial state to trajectory
     trajectory.append({
-        'state': tuple(map(int, pos)),  # Convert to regular Python tuple of ints
+        'state': tuple(map(int, pos)),
         'action': None,
-        'reward': float(0)  # Ensure reward is float
+        'reward': float(0)
     })
     print(f"Added initial position to trajectory: {pos}")
     
     try:
         while not done and steps < max_steps:
+            # Check if agent is stuck (same position twice)
+            if last_pos == pos:
+                print("Agent appears to be stuck")
+                break
+            last_pos = pos
+            
             # Get action from current policy
             if isinstance(current_agent, DQNAgent) or isinstance(current_agent, ReinforceAgent):
                 with torch.no_grad():
@@ -130,27 +137,29 @@ def play_policy():
                         probs = current_agent.policy(state_tensor)
                         action = torch.argmax(probs).item()
             else:  # QLearningAgent
-                action = int(np.argmax(current_agent.q_table[state]))  # Convert to Python int
+                action = int(np.argmax(current_agent.q_table[state]))
             
             print(f"Step {steps}: Chosen action: {action}")
             next_state, reward, done, next_pos = env.step(action)
             print(f"Step {steps}: New state: {next_state}, new position: {next_pos}, reward: {reward}, done: {done}")
             
             trajectory.append({
-                'state': tuple(map(int, next_pos)),  # Convert to regular Python tuple of ints
-                'action': int(action),  # Convert to Python int
-                'reward': float(reward)  # Convert to Python float
+                'state': tuple(map(int, next_pos)),
+                'action': int(action),
+                'reward': float(reward)
             })
             
             total_reward += reward
             state = next_state
+            pos = next_pos
             steps += 1
         
         print(f"Final trajectory length: {len(trajectory)}")
         print(f"Final trajectory: {trajectory}")
         return jsonify({
             'trajectory': trajectory,
-            'total_reward': float(total_reward)  # Convert to Python float
+            'total_reward': float(total_reward),
+            'stuck': last_pos == pos  # Add this flag to indicate if agent got stuck
         })
     except Exception as e:
         print(f"Error during policy execution: {e}")

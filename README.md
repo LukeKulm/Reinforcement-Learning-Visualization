@@ -19,13 +19,11 @@ An interactive web application for visualizing and comparing different reinforce
 - Customizable hyperparameters
 - Policy visualization and playback
 
-## Project Structure
-
 ## Installation Instructions
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/rl-visualization.git
+git clone https://github.com/LukeKulm/Reinforcement-Learning-Visualization.git
 cd rl-visualization
 ```
 2. Create and activate a virtual environment:

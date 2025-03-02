@@ -8,6 +8,7 @@ class RLVisualizer {
     this.cumulativeReward = 0;
     this.rewardHistory = [];
     this.isPlayingPolicy = false;
+    this.policyPlaybackCancelled = false;
 
     this.setupControls();
     this.setupAlgorithmSpecificParams();
@@ -76,6 +77,11 @@ class RLVisualizer {
         this.pauseTraining();
         startButton.textContent = 'Resume Training';
       } else {
+        // Cancel any ongoing policy playback when resuming training
+        this.policyPlaybackCancelled = true;
+        this.isPlayingPolicy = false;
+        playPolicyButton.disabled = false;
+
         this.startTraining();
         startButton.textContent = 'Pause Training';
       }
@@ -93,7 +99,7 @@ class RLVisualizer {
     });
 
     playPolicyButton.addEventListener('click', async () => {
-      if (!this.isPlayingPolicy) {
+      if (!this.isPlayingPolicy && !this.isTraining) {
         this.isPlayingPolicy = true;
         playPolicyButton.disabled = true;
         await this.playPolicy();
@@ -230,12 +236,24 @@ class RLVisualizer {
       try {
         await this.visualizeTrajectory(data.trajectory);
       } finally {
-        // Re-enable controls
+        // Always re-enable controls and reset playback state
+        this.isPlayingPolicy = false;
         playPolicyButton.disabled = false;
         startButton.disabled = false;
+
+        // If agent got stuck, show a message
+        if (data.stuck) {
+          console.log("Agent got stuck - policy may need more training");
+          // Optionally show a message to the user
+          alert("Agent got stuck - the policy may need more training");
+        }
       }
     } catch (error) {
       console.error("Error during policy playback:", error);
+      // Make sure controls are re-enabled even if there's an error
+      this.isPlayingPolicy = false;
+      document.getElementById('play-policy').disabled = false;
+      document.getElementById('start-training').disabled = false;
     }
   }
 
@@ -244,6 +262,9 @@ class RLVisualizer {
       console.log("Empty trajectory received");
       return;
     }
+
+    // Reset the cancellation flag
+    this.policyPlaybackCancelled = false;
 
     console.log("Starting trajectory visualization");
     console.log("Full trajectory:", trajectory);
@@ -257,6 +278,12 @@ class RLVisualizer {
 
     // Animate through each state in the trajectory
     for (let i = 1; i < trajectory.length; i++) {
+      // Check if playback was cancelled
+      if (this.policyPlaybackCancelled) {
+        console.log("Policy playback cancelled");
+        return;
+      }
+
       const step = trajectory[i];
       console.log(`Step ${i}:`, step);
       console.log(`Moving to position:`, step.state);
@@ -293,6 +320,9 @@ class RLVisualizer {
   }
 
   resetEnvironment() {
+    // Cancel any ongoing policy playback
+    this.policyPlaybackCancelled = true;
+
     this.currentEpisode = 0;
     this.totalReward = 0;
     this.cumulativeReward = 0;
@@ -310,6 +340,12 @@ class RLVisualizer {
 
     this.fetchGridInfo();
     fetch('/api/reset', { method: 'POST' });
+
+    // Re-enable controls
+    const playPolicyButton = document.getElementById('play-policy');
+    const startButton = document.getElementById('start-training');
+    playPolicyButton.disabled = false;
+    startButton.disabled = false;
   }
 
   updateParameter(name, value) {
