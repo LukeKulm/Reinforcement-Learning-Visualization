@@ -13,13 +13,25 @@
         
         <div class="main-content">
             <div class="visualization-panel">
-                <h2>Grid World Environment</h2>
-                <div class="grid-container">
-                    <div id="gridworld"></div>
-                </div>
-                <div class="state-info">
-                    <p>Episode: <span id="episode-counter">0</span></p>
-                    <p>Total Reward: <span id="total-reward">0</span></p>
+                <div class="visualization-row">
+                    <div class="grid-section">
+                        <h2>Grid World Environment</h2>
+                        <div class="grid-container">
+                            <div id="gridworld"></div>
+                        </div>
+                        <div class="state-info">
+                            <p>Episode: <span id="episode-counter">0</span></p>
+                            <p>Total Reward: <span id="total-reward">0</span></p>
+                        </div>
+                    </div>
+
+                    <div class="algorithm-mind">
+                        <h2>Algorithm's Mind</h2>
+                        <div class="mind-container">
+                            <div id="algorithm-mind"></div>
+                            <div id="q-value-grid"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -54,6 +66,7 @@
         </div>
     </div>
     <script src="{{ url_for('static', filename='js/grid_renderer.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/q_value_renderer.js') }}"></script>
     <script src="{{ url_for('static', filename='js/visualization.js') }}"></script>
 </body>
 </html> 

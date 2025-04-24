@@ -17,7 +17,7 @@ body {
 }
 
 .visualization-panel {
-  flex: 1;
+  flex: 2;
   padding: 20px;
   border: 1px solid #ddd;
   border-radius: 5px;
@@ -133,4 +133,37 @@ body {
   position: absolute;
   font-size: 20px;
   color: #666;
+}
+
+.visualization-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.grid-section {
+  flex: 1;
+  min-width: 300px;
+}
+
+.algorithm-mind {
+  flex: 1;
+  min-width: 300px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.mind-container {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#algorithm-mind {
+  font-family: "Helvetica Neue", monospace;
+  font-size: 14px;
+  line-height: 1.4;
 }

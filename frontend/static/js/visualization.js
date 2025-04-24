@@ -9,6 +9,7 @@ class RLVisualizer {
     this.rewardHistory = [];
     this.isPlayingPolicy = false;
     this.policyPlaybackCancelled = false;
+    this.qValueGrid = new QValueRenderer('q-value-grid', 5, 5);
 
     this.setupControls();
     this.setupAlgorithmSpecificParams();
@@ -317,6 +318,11 @@ class RLVisualizer {
 
     this.rewardChart.update('none');
     this.currentEpisode++;
+
+    // Update Q-value visualization if using Q-learning
+    if (document.getElementById('algorithm').value === 'q-learning' && data.q_table) {
+      this.qValueGrid.drawQValues(data.q_table);
+    }
   }
 
   resetEnvironment() {

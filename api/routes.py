@@ -44,11 +44,17 @@ def train_step():
     # Get current policy for visualization
     policy = current_agent.get_policy()
     
-    return jsonify({
+    response_data = {
         'reward': total_reward,
-        'agent_pos': next_pos,  # Return final position
-        'policy': policy.tolist() if isinstance(policy, np.ndarray) else policy
-    })
+        'agent_pos': next_pos,
+        'policy': policy.tolist() if isinstance(policy, np.ndarray) else policy,
+    }
+    
+    # Add Q-table for Q-learning visualization
+    if isinstance(current_agent, QLearningAgent):
+        response_data['q_table'] = current_agent.q_table.tolist()
+    
+    return jsonify(response_data)
 
 @api_bp.route('/reset', methods=['POST'])
 def reset():
